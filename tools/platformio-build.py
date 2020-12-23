@@ -35,7 +35,7 @@ FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
 assert isdir(FRAMEWORK_DIR)
 
 env.Append(
-    ASFLAGS=["-x", "assembler-with-cpp"],
+    ASFLAGS=["-x", "assembler-with-cpp", "-mlongcalls"],
 
     CFLAGS=[
         "-std=gnu99",
@@ -118,6 +118,7 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_https_ota"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_https_server"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_ringbuf"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_websocket_client"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "espcoredump"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
@@ -170,7 +171,7 @@ env.Append(
     ],
 
     LIBS=[
-        "-lgcc", "-lfreertos", "-lmesh", "-lod", "-lwear_levelling", "-lfb_gfx", "-lesp_adc_cal", "-lc_nano", "-lesp32", "-ldriver", "-lhal", "-ljsmn", "-lsmartconfig", "-lesp_http_server", "-lprotocomm", "-lface_recognition", "-lespnow", "-ltcpip_adapter", "-lface_detection", "-lunity", "-lc", "-llibsodium", "-lesp_http_client", "-lapp_update", "-lnewlib", "-lcxx", "-ltcp_transport", "-lm", "-lefuse", "-lopenssl", "-lwifi_provisioning", "-lespcoredump", "-llog", "-lmbedtls", "-lesp_ringbuf", "-lwps", "-lnet80211", "-lmqtt", "-lesp_https_server", "-lapp_trace", "-lesp_event", "-lesp32-camera", "-lsoc", "-lheap", "-llwip", "-lwpa", "-lrtc", "-lxtensa-debug-module", "-lspi_flash", "-lphy", "-lfr", "-lconsole", "-lcoap", "-lbtdm_app", "-lsdmmc", "-lfd", "-lmicro-ecc", "-ljson", "-lcore", "-lprotobuf-c", "-lethernet", "-lspiffs", "-lnvs_flash", "-lwpa_supplicant", "-lvfs", "-lasio", "-lwpa2", "-lpp", "-lbootloader_support", "-limage_util", "-ldl_lib", "-lulp", "-lnghttp", "-lpthread", "-lfreemodbus", "-lexpat", "-lfatfs", "-lsmartconfig_ack", "-lmdns", "-lcoexist", "-lesp-tls", "-lesp_https_ota", "-lbt", "-lstdc++"
+        "-lgcc", "-lespcoredump", "-lesp_event", "-lheap", "-lpe", "-lmesh", "-lm", "-lesp_http_client", "-lfb_gfx", "-lface_detection", "-lesp_adc_cal", "-ldetection_cat_face", "-lmbedtls", "-lunity", "-lspiffs", "-lod", "-lapp_trace", "-llog", "-lesp_websocket_client", "-lexpat", "-lwpa2", "-lxtensa-debug-module", "-lnet80211", "-lhal", "-lvfs", "-lwps", "-lmqtt", "-lasio", "-lbt", "-lwpa_supplicant", "-lpp", "-lmdns", "-llwip", "-lnvs_flash", "-lc", "-lbootloader_support", "-lnewlib", "-lsdmmc", "-lapp_update", "-lethernet", "-lefuse", "-lprotobuf-c", "-ldetection", "-lfreemodbus", "-lcore", "-lface_recognition", "-lfd", "-lcoap", "-ljsmn", "-lesp_https_ota", "-ltcp_transport", "-lbtdm_app", "-lesp_ringbuf", "-ldriver", "-lwifi_provisioning", "-llibsodium", "-lopenssl", "-lfatfs", "-lnghttp", "-lespnow", "-lprotocomm", "-lspi_flash", "-lc_nano", "-lulp", "-lesp_http_server", "-lesp32-camera", "-lsmartconfig", "-lsmartconfig_ack", "-lesp-tls", "-lcoexist", "-lmicro-ecc", "-lesp_https_server", "-lwpa", "-ltcpip_adapter", "-lwear_levelling", "-lfreertos", "-lsoc", "-ljson", "-lesp32", "-lpthread", "-lcxx", "-lfr", "-ldl", "-lphy", "-limage_util", "-lrtc", "-lconsole", "-lstdc++"
     ],
 
     LIBSOURCE_DIRS=[
@@ -193,16 +194,20 @@ if not env.BoardConfig().get("build.ldscript", ""):
 
 libs = []
 
+variants_dir = join(FRAMEWORK_DIR, "variants")
+
+if "build.variants_dir" in env.BoardConfig():
+    variants_dir = join("$PROJECT_DIR", env.BoardConfig().get("build.variants_dir"))
+
 if "build.variant" in env.BoardConfig():
     env.Append(
         CPPPATH=[
-            join(FRAMEWORK_DIR, "variants",
-                 env.BoardConfig().get("build.variant"))
+            join(variants_dir, env.BoardConfig().get("build.variant"))
         ]
     )
     libs.append(env.BuildLibrary(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
-        join(FRAMEWORK_DIR, "variants", env.BoardConfig().get("build.variant"))
+        join(variants_dir, env.BoardConfig().get("build.variant"))
     ))
 
 envsafe = env.Clone()
